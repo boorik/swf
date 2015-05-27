@@ -20,7 +20,7 @@ class ::CLASS_NAME:: extends SimpleButton {
 		var swf = SWF.instances.get ("::SWF_ID::");
 		var symbol = swf.data.getCharacter (::SYMBOL_ID::);
 		
-		super (cast symbol);
+		super (swf.data,cast symbol);
 		
 	}
 	
