@@ -85,11 +85,11 @@ class MovieClip extends flash.display.MovieClip {
 		__totalFrames = data.frames.length;
 		
 		__currentLabels = [];
-
+		
 		for (frame in data.frameLabels.keys ()) {
-
+			
 			__currentLabels.push (new FrameLabel (data.frameLabels.get (frame), frame + 1));
-
+			
 		}
 		
 		objectPool = new Map<Int, List<ChildObject>>();
@@ -318,8 +318,6 @@ class MovieClip extends flash.display.MovieClip {
 			}
 		}
 		
-		
-		
 		if (lastTag != null ) {
 			
 			
@@ -364,12 +362,13 @@ class MovieClip extends flash.display.MovieClip {
 			
 		}
 		
-		
 		if (Std.is(displayObject, MorphShape)) {
 			
-			if (lastTag != null) cast(displayObject, MorphShape).render(lastTag.ratio);
+			if (lastTag != null) cast (displayObject, MorphShape).render (lastTag.ratio);
 			
 		}
+		
+		Reflect.setField (this, displayObject.name, displayObject);
 		
 	}
 	
@@ -435,6 +434,13 @@ class MovieClip extends flash.display.MovieClip {
 					// Remove the object from the display list
 					// todo - disconnect event handlers ?
 					removeChild(activeObject.object);
+					
+					if (activeObject.object.name != null && Reflect.hasField (this, activeObject.object.name)) {
+						
+						Reflect.deleteField (this, activeObject.object.name);
+						
+					}
+					
 				} else {
 					newActiveObjects.push(activeObject);
 				}

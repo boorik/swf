@@ -6,7 +6,11 @@ import format.SWF;
 import openfl.Assets;
 
 
-class ::CLASS_NAME:: extends MovieClip {
+class ::PREFIX::::CLASS_NAME:: extends MovieClip {
+	
+	
+	::foreach CLASS_PROPERTIES::public var ::name:: (default, null):::type::;
+	::end::
 	
 	
 	public function new () {
@@ -29,7 +33,11 @@ class ::CLASS_NAME:: extends MovieClip {
 
 
 #else
-@:bind class ::CLASS_NAME:: extends flash.display.MovieClip {
+@:bind @:native("::CLASS_NAME::") class ::PREFIX::::CLASS_NAME:: extends flash.display.MovieClip {
+	
+	
+	::foreach CLASS_PROPERTIES::public var ::name:: (default, null):::type::;
+	::end::
 	
 	
 	public function new () {

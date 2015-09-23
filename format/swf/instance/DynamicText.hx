@@ -17,7 +17,7 @@ import format.swf.SWFTimelineContainer;
 
 import openfl.Assets;
 
-#if ((cpp || neko) && !openfl_next)
+#if ((cpp || neko) && openfl_legacy)
 import openfl.text.AbstractFont;
 #end
 
@@ -51,7 +51,7 @@ class DynamicText extends TextField {
 		
 		var format = new TextFormat ();
 		if (tag.hasTextColor) format.color = (tag.textColor & 0x00FFFFFF);
-		format.size = (tag.fontHeight / 20);
+		format.size = Math.round (tag.fontHeight / 20);
 		
 		if (tag.hasFont) {
 			
@@ -59,7 +59,7 @@ class DynamicText extends TextField {
 			
 			if (Std.is (font, TagDefineFont2)) {
 				
-				#if ((cpp || neko) && !openfl_next)
+				#if ((cpp || neko) && openfl_legacy)
 				
 				var fontName =  cast (font, TagDefineFont2).fontName;
 				
@@ -102,17 +102,23 @@ class DynamicText extends TextField {
 			
 		}
 		
-		format.leftMargin = tag.leftMargin / 20;
-		format.rightMargin = tag.rightMargin / 20;
-		format.indent = tag.indent / 20;
-		format.leading = tag.leading / 20;
-		
-		switch (tag.align) {
+		if (tag.hasLayout) {
 			
-			case 0: format.align = TextFormatAlign.LEFT;
-			case 1: format.align = TextFormatAlign.RIGHT;
-			case 2: format.align = TextFormatAlign.CENTER;
-			case 3: format.align = TextFormatAlign.JUSTIFY;
+			switch (tag.align) {
+				
+				case 0: format.align = TextFormatAlign.LEFT;
+				case 1: format.align = TextFormatAlign.RIGHT;
+				case 2: format.align = TextFormatAlign.CENTER;
+				case 3: format.align = TextFormatAlign.JUSTIFY;
+				
+			}
+			
+			format.leftMargin = Std.int (tag.leftMargin / 20);
+			format.rightMargin = Std.int (tag.rightMargin / 20);
+			format.indent = Std.int (tag.indent / 20);
+			format.leading = Std.int (tag.leading / 20);
+			
+			if (embedFonts) format.leading += 4; // TODO: Why is this necessary?
 			
 		}
 		
@@ -123,8 +129,9 @@ class DynamicText extends TextField {
 			#if (cpp || neko)
 			
 			var plain = new EReg ("</p>", "g").replace (tag.initialText, "\n");
-			plain = new EReg ("<br>", "g").replace (tag.initialText, "\n");
-			text = new EReg ("<.*?>", "g").replace (plain, "");
+			plain = new EReg ("<br>", "g").replace (plain, "\n");
+			plain = new EReg ("<.*?>", "g").replace (plain, "");
+			text = StringTools.htmlUnescape (plain);
 			
 			#else
 			
@@ -147,7 +154,7 @@ class DynamicText extends TextField {
 	}
 	
 	
-	#if ((cpp || neko) && !openfl_next)
+	#if ((cpp || neko) && openfl_legacy)
 	
 	private function getFont (font:TagDefineFont2):String {
 		
@@ -168,7 +175,7 @@ class DynamicText extends TextField {
 }
 
 
-#if ((cpp || neko) && !openfl_next)
+#if ((cpp || neko) && openfl_legacy)
 
 
 class SWFFont extends AbstractFont {

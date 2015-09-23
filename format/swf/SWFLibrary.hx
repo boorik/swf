@@ -16,6 +16,8 @@ import openfl.Assets;
 
 #if (lime && !lime_legacy)
 import lime.graphics.Image;
+import lime.app.Future;
+import lime.app.Promise;
 #end
 
 #if !flash
@@ -133,7 +135,54 @@ import format.SWF;
 	}
 	
 	
-	public override function load (handler:AssetLibrary -> Void):Void {
+	#if !openfl_legacy
+	public override function load ():Future<lime.Assets.AssetLibrary> {
+		
+		var promise = new Promise<lime.Assets.AssetLibrary> ();
+		
+		#if flash
+		
+		context = new LoaderContext (false, ApplicationDomain.currentDomain, null);
+		context.allowCodeImport = true;
+		
+		if (Assets.isLocal (id, AssetType.BINARY)) {
+			
+			loader = new Loader ();
+			loader.contentLoaderInfo.addEventListener (Event.COMPLETE, function (_) {
+				
+				promise.complete (this);
+				
+			});
+			loader.loadBytes (Assets.getBytes (id), context);
+			
+		} else {
+			
+			loader = new Loader ();
+			loader.contentLoaderInfo.addEventListener (Event.COMPLETE, function (_) {
+				
+				promise.complete (this);
+				
+			});
+			loader.load (new URLRequest (Assets.getPath (id)), context);
+			
+		}
+		
+		#else
+		
+		if (swf == null) {
+			
+			swf = new SWF (Assets.getBytes (id));
+			promise.complete (this);
+			
+		}
+		
+		#end
+		
+		return promise.future;
+		
+	}
+	#else
+	public override function load (handler:AssetLibrary->Void):Void {
 		
 		#if flash
 		
@@ -174,6 +223,7 @@ import format.SWF;
 		#end
 		
 	}
+	#end
 	
 	
 }

@@ -8,12 +8,15 @@ import flash.events.Event;
 import flash.media.Sound;
 import flash.text.Font;
 import flash.utils.ByteArray;
+import format.swf.lite.symbols.BitmapSymbol;
 import format.swf.lite.SWFLite;
 import haxe.Unserializer;
 import openfl.Assets;
 
 #if (lime && !lime_legacy)
 import lime.graphics.Image;
+import lime.app.Future;
+import lime.app.Promise;
 #end
 
 
@@ -87,9 +90,129 @@ import lime.graphics.Image;
 	}
 	
 	
-	public override function load (handler:AssetLibrary -> Void):Void {
+	#if !openfl_legacy
+	public override function load ():Future<lime.Assets.AssetLibrary> {
 		
+		var promise = new Promise<lime.Assets.AssetLibrary> ();
+		
+		#if swflite_preload
+		var paths = [];
+		var bitmap:BitmapSymbol;
+		
+		for (symbol in swf.symbols) {
+			
+			if (Std.is (symbol, BitmapSymbol)) {
+				
+				bitmap = cast symbol;
+				paths.push (bitmap.path);
+				
+			}
+			
+		}
+		
+		if (paths.length == 0) {
+			
+			promise.complete (this);
+			
+		} else {
+			
+			var loaded = 0;
+			
+			var onLoad = function (_) {
+				
+				loaded++;
+				
+				promise.progress (loaded / paths.length);
+				
+				if (loaded == paths.length) {
+					
+					promise.complete (this);
+					
+				}
+				
+			};
+			
+			for (path in paths) {
+				
+				Assets.loadBitmapData (path).onComplete (onLoad).onError (promise.error);
+				
+			}
+			
+		}
+		#else
+		promise.complete (this);
+		#end
+		
+		return promise.future;
+		
+	}
+	#else
+	public override function load (handler:AssetLibrary->Void):Void {
+		
+		#if swflite_preload
+		var paths = [];
+		var bitmap:BitmapSymbol;
+		
+		for (symbol in swf.symbols) {
+			
+			if (Std.is (symbol, BitmapSymbol)) {
+				
+				bitmap = cast symbol;
+				paths.push (bitmap.path);
+				
+			}
+			
+		}
+		
+		if (paths.length == 0) {
+			
+			handler (this);
+			
+		} else {
+			
+			var loaded = 0;
+			
+			var onLoad = function (_) {
+				
+				loaded++;
+				
+				if (loaded == paths.length) {
+					
+					handler (this);
+					
+				}
+				
+			};
+			
+			for (path in paths) {
+				
+				Assets.loadBitmapData (path, onLoad);
+				
+			}
+			
+		}
+		#else
 		handler (this);
+		#end
+		
+	}
+	#end
+	
+	
+	public override function unload ():Void {
+		
+		var bitmap:BitmapSymbol;
+		
+		for (symbol in swf.symbols) {
+			
+			if (Std.is (symbol, BitmapSymbol)) {
+				
+				bitmap = cast symbol;
+				Assets.cache.removeBitmapData (bitmap.path);
+				
+			}
+			
+		}
 		
 	}
 	
